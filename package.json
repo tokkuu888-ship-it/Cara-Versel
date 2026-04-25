@@ -1,0 +1,27 @@
+{
+  "name": "next-express-vercel-postgres-monorepo",
+  "version": "1.0.0",
+  "description": "Full-stack monorepo with Next.js, Express.js, and Vercel Postgres",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:api": "cd apps/api && npm run dev",
+    "build": "npm run build:api && npm run build:web",
+    "build:web": "cd apps/web && npm run build",
+    "build:api": "cd apps/api && npm run build",
+    "start": "concurrently \"npm run start:api\" \"npm run start:web\"",
+    "start:web": "cd apps/web && npm start",
+    "start:api": "cd apps/api && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

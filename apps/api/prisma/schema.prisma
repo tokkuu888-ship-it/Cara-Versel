@@ -1,0 +1,309 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String?
+  email      String   @unique
+  role       UserRole @default(PHD_CANDIDATE)
+  department String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  seminars              SeminarSession[]       @relation("SeminarAttendees")
+  presentations         Presentation[]
+  progressReports       ProgressReport[]
+  availabilityPolls     AvailabilityPoll[]
+  availabilityResponses AvailabilityResponse[]
+  feedbackGiven         Feedback[]             @relation("FeedbackGiver")
+  feedbackReceived      Feedback[]             @relation("FeedbackReceiver")
+  notifications         Notification[]
+  reviewedReports       ProgressReport[]       @relation("ReportReviewer")
+  posts                 Post[]
+
+  @@map("users")
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("posts")
+}
+
+// User roles enum
+enum UserRole {
+  DEAN
+  COORDINATOR
+  FACULTY
+  PHD_CANDIDATE
+  TECHNICAL_MODERATOR
+}
+
+// Seminar phase enum
+enum SeminarPhase {
+  PRESENTATION
+  PEER_REVIEW
+  FACULTY_VIVA
+  MENTORSHIP
+}
+
+// Pilot phase enum
+enum PilotPhaseStatus {
+  ORIENTATION
+  SENIOR_SHOWCASE
+  FULL_INTEGRATION
+}
+
+// Availability status enum
+enum AvailabilityStatus {
+  AVAILABLE
+  UNAVAILABLE
+  TENTATIVE
+}
+
+model SeminarWindow {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  sessions SeminarSession[]
+  polls    AvailabilityPoll[]
+
+  @@map("seminar_windows")
+}
+
+model SeminarSession {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  scheduledAt DateTime
+  duration    Int           @default(90) // minutes
+  location    String?
+  isHybrid    Boolean       @default(false)
+  hybridLink  String?
+  phase       SeminarPhase  @default(PRESENTATION)
+  status      SessionStatus @default(SCHEDULED)
+  windowId    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  window    SeminarWindow  @relation(fields: [windowId], references: [id], onDelete: Cascade)
+  presenter Presentation[]
+  attendees User[]         @relation("SeminarAttendees")
+  feedback  Feedback[]
+
+  @@map("seminar_sessions")
+}
+
+enum SessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Presentation {
+  id          String             @id @default(cuid())
+  title       String
+  abstract    String?
+  chapter     String?
+  methodology String?
+  presenterId String
+  sessionId   String
+  slidesUrl   String?
+  status      PresentationStatus @default(DRAFT)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  // Relations
+  presenter User           @relation(fields: [presenterId], references: [id], onDelete: Cascade)
+  session   SeminarSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  feedback  Feedback[]
+
+  @@map("presentations")
+}
+
+enum PresentationStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PRESENTED
+  CANCELLED
+}
+
+model ProgressReport {
+  id             String       @id @default(cuid())
+  title          String
+  content        String
+  achievements   String?
+  challenges     String?
+  nextSteps      String?
+  timeline       String?
+  studentId      String
+  submittedAt    DateTime     @default(now())
+  reviewedAt     DateTime?
+  reviewerId     String?
+  reviewComments String?
+  status         ReportStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  student  User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("ReportReviewer", fields: [reviewerId], references: [id])
+
+  @@map("progress_reports")
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  REVISION_REQUIRED
+}
+
+model AvailabilityPoll {
+  id          String   @id @default(cuid())
+  windowId    String
+  pollerId    String
+  title       String
+  description String?
+  deadline    DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  window    SeminarWindow          @relation(fields: [windowId], references: [id], onDelete: Cascade)
+  poller    User                   @relation(fields: [pollerId], references: [id], onDelete: Cascade)
+  responses AvailabilityResponse[]
+
+  @@map("availability_polls")
+}
+
+model AvailabilityResponse {
+  id             String             @id @default(cuid())
+  pollId         String
+  respondentId   String
+  status         AvailabilityStatus @default(AVAILABLE)
+  preferredTimes String? // JSON array of preferred time slots
+  comments       String?
+  submittedAt    DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  // Relations
+  poll       AvailabilityPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  respondent User             @relation(fields: [respondentId], references: [id], onDelete: Cascade)
+
+  @@map("availability_responses")
+}
+
+model Feedback {
+  id             String           @id @default(cuid())
+  sessionId      String?
+  presentationId String?
+  giverId        String
+  receiverId     String
+  category       FeedbackCategory
+  content        String
+  rating         Int? // 1-5 scale
+  isPublic       Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Relations
+  session      SeminarSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  presentation Presentation?   @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  giver        User            @relation("FeedbackGiver", fields: [giverId], references: [id], onDelete: Cascade)
+  receiver     User            @relation("FeedbackReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
+}
+
+enum FeedbackCategory {
+  TECHNICAL
+  RHETORICAL
+  METHODOLOGY
+  STRUCTURE
+  PRESENTATION_SKILLS
+  MENTORSHIP
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  title       String
+  message     String
+  type        NotificationType
+  recipientId String
+  isRead      Boolean          @default(false)
+  data        Json? // Additional data as JSON
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  recipient User @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  SEMINAR_SCHEDULED
+  SEMINAR_REMINDER
+  PROGRESS_REPORT_DUE
+  AVAILABILITY_POLL
+  FEEDBACK_RECEIVED
+  SYSTEM_ANNOUNCEMENT
+}
+
+model PilotPhase {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  phase       PilotPhaseStatus
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean          @default(true)
+  objectives  String[] // Array of objectives
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("pilot_phases")
+}
+
+model SampleData {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  value       Int?
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("sample_data")
+}
