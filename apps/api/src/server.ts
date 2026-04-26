@@ -20,11 +20,24 @@ app.use(helmet());
 
 // CORS middleware
 app.use(cors({
-  origin: [
-    'https://cara-versel-m6khqpy64-tokumas-projects.vercel.app',
-    'http://localhost:3000'
-  ],
-  credentials: true
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://cara-versel-m6khqpy64-tokumas-projects.vercel.app',
+      'http://localhost:3000',
+      'https://cara-versel.onrender.com'
+    ];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
 }));
 
 // Body parsing middleware
