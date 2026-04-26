@@ -15,17 +15,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Security middleware
-app.use(helmet());
-
-// CORS middleware
+// CORS middleware (must come before helmet)
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
       'https://cara-versel-m6khqpy64-tokumas-projects.vercel.app',
+      'https://cara-versel-api.vercel.app',
       'http://localhost:3000',
-      'https://cara-versel.onrender.com',
-      'https://cara-versel-api.vercel.app'
+      'https://cara-versel.onrender.com'
     ];
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
@@ -39,6 +36,13 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
+}));
+
+// Security middleware (after CORS)
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false
 }));
 
 // Body parsing middleware
