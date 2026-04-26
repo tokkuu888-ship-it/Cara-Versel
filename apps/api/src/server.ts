@@ -20,7 +20,11 @@ app.use(helmet());
 
 // CORS middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://cara-versel-m6khqpy64-tokumas-projects.vercel.app',
+    'https://cara-versel.onrender.com'
+  ],
   credentials: true
 }));
 
@@ -43,6 +47,16 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'PhD Seminar Management API',
     version: '1.0.0'
+  });
+});
+
+// Test endpoint for frontend-backend communication
+app.get('/api/test', (req, res) => {
+  res.status(200).json({ 
+    message: 'Backend is responding correctly!',
+    timestamp: new Date().toISOString(),
+    service: 'PhD Seminar Management API',
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
