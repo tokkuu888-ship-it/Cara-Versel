@@ -24,7 +24,8 @@ app.use(cors({
     const allowedOrigins = [
       'https://cara-versel-m6khqpy64-tokumas-projects.vercel.app',
       'http://localhost:3000',
-      'https://cara-versel.onrender.com'
+      'https://cara-versel.onrender.com',
+      'https://cara-versel-api.vercel.app'
     ];
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
