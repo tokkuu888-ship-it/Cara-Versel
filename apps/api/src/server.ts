@@ -21,9 +21,8 @@ app.use(helmet());
 // CORS middleware
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
     'https://cara-versel-m6khqpy64-tokumas-projects.vercel.app',
-    'https://cara-versel.onrender.com'
+    'http://localhost:3000'
   ],
   credentials: true
 }));
