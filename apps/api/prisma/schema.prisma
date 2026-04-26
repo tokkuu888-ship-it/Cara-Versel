@@ -221,6 +221,7 @@ model AvailabilityResponse {
   poll       AvailabilityPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
   respondent User             @relation(fields: [respondentId], references: [id], onDelete: Cascade)
 
+  @@unique([pollId, respondentId])
   @@map("availability_responses")
 }
 
