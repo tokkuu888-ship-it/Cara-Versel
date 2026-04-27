@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { fetchSeminars, fetchUsers, fetchProgressReports } from '@/lib/phd-api'
+import { fetchSeminars, fetchUsers, fetchProgressReports, createSeminarWindow, createSeminarSession, createUser, createProgressReport, createAvailabilityPoll } from '@/lib/phd-api'
 
 interface DashboardStats {
   totalSeminars: number
@@ -49,29 +49,72 @@ export function PhDSeminarDashboard() {
     refetchInterval: 30000,
   })
 
-  const handleCreateSeminar = () => {
-    console.log('Create Seminar clicked')
-    // TODO: Implement seminar creation modal/navigation
+  const handleCreateSeminar = async () => {
+    try {
+      const windowData = {
+        title: 'New Seminar Window',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        isActive: true,
+        phase: 'PLANNING'
+      }
+      await createSeminarWindow(windowData)
+      alert('Seminar window created successfully!')
+    } catch (error) {
+      alert('Failed to create seminar window')
+      console.error(error)
+    }
   }
 
-  const handleAddUser = () => {
-    console.log('Add User clicked')
-    // TODO: Implement user creation modal/navigation
+  const handleAddUser = async () => {
+    try {
+      const userData = {
+        name: 'New User',
+        email: `user${Date.now()}@example.com`,
+        role: 'PHD_CANDIDATE',
+        department: 'Computer Science'
+      }
+      await createUser(userData)
+      alert('User created successfully!')
+    } catch (error) {
+      alert('Failed to create user')
+      console.error(error)
+    }
   }
 
-  const handleCreateReport = () => {
-    console.log('Create Report clicked')
-    // TODO: Implement report creation modal/navigation
+  const handleCreateReport = async () => {
+    try {
+      const reportData = {
+        title: 'Progress Report',
+        content: 'This is a sample progress report',
+        studentId: users?.[0]?.id || 'sample-id',
+        status: 'PENDING'
+      }
+      await createProgressReport(reportData)
+      alert('Progress report created successfully!')
+    } catch (error) {
+      alert('Failed to create progress report')
+      console.error(error)
+    }
   }
 
-  const handleCreatePoll = () => {
-    console.log('Create Poll clicked')
-    // TODO: Implement poll creation modal/navigation
+  const handleCreatePoll = async () => {
+    try {
+      const pollData = {
+        title: 'Availability Poll',
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        isActive: true
+      }
+      await createAvailabilityPoll(pollData)
+      alert('Availability poll created successfully!')
+    } catch (error) {
+      alert('Failed to create availability poll')
+      console.error(error)
+    }
   }
 
   const handleRefresh = () => {
-    console.log('Refresh clicked')
-    // TODO: Implement data refresh
+    window.location.reload()
   }
 
   // Calculate stats
@@ -209,13 +252,20 @@ export function PhDSeminarDashboard() {
               Submit Report
             </Button>
             <Button
-              onClick={handleCreatePoll}
-              variant="secondary"
-              className="flex items-center gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              Create Poll
-            </Button>
+            onClick={handleCreatePoll}
+            variant="secondary"
+            className="flex items-center gap-2"
+          >
+            <Calendar className="h-4 w-4" />
+            Create Poll
+          </Button>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <UserCheck className="h-4 w-4" />
+            View Users
+          </Button>
           </div>
         </div>
 
@@ -334,6 +384,56 @@ export function PhDSeminarDashboard() {
               {(!reports || reports.length === 0) && (
                 <p className="text-center text-gray-500 py-4">
                   No progress reports submitted
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Users by Role Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCheck className="h-5 w-5" />
+                Users by Role
+              </CardTitle>
+              <CardDescription>
+                System participants organized by role
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {users && users.length > 0 ? (
+                <div className="space-y-3">
+                  {['DEAN', 'COORDINATOR', 'FACULTY', 'PHD_CANDIDATE', 'ADMIN'].map((role) => {
+                    const roleUsers = users.filter((u: any) => u.role === role)
+                    if (roleUsers.length === 0) return null
+                    return (
+                      <div key={role} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{role.replace('_', ' ')}</p>
+                          <p className="text-sm text-gray-500">{roleUsers.length} user(s)</p>
+                        </div>
+                        <div className="flex -space-x-2">
+                          {roleUsers.slice(0, 3).map((user: any) => (
+                            <div
+                              key={user.id}
+                              className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                            >
+                              {user.name?.charAt(0) || 'U'}
+                            </div>
+                          ))}
+                          {roleUsers.length > 3 && (
+                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white">
+                              +{roleUsers.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-4">
+                  No users in the system
                 </p>
               )}
             </CardContent>
