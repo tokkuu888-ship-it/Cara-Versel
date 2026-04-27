@@ -12,9 +12,13 @@ import {
   TrendingUp,
   UserCheck,
   BookOpen,
-  Award
+  Award,
+  Plus,
+  Settings,
+  RefreshCw
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { fetchSeminars, fetchUsers, fetchProgressReports } from '@/lib/phd-api'
 
 interface DashboardStats {
@@ -44,6 +48,31 @@ export function PhDSeminarDashboard() {
     queryFn: fetchProgressReports,
     refetchInterval: 30000,
   })
+
+  const handleCreateSeminar = () => {
+    console.log('Create Seminar clicked')
+    // TODO: Implement seminar creation modal/navigation
+  }
+
+  const handleAddUser = () => {
+    console.log('Add User clicked')
+    // TODO: Implement user creation modal/navigation
+  }
+
+  const handleCreateReport = () => {
+    console.log('Create Report clicked')
+    // TODO: Implement report creation modal/navigation
+  }
+
+  const handleCreatePoll = () => {
+    console.log('Create Poll clicked')
+    // TODO: Implement poll creation modal/navigation
+  }
+
+  const handleRefresh = () => {
+    console.log('Refresh clicked')
+    // TODO: Implement data refresh
+  }
 
   // Calculate stats
   const stats: DashboardStats = {
@@ -124,12 +153,70 @@ export function PhDSeminarDashboard() {
         transition={{ duration: 0.5 }}
       >
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            PhD Seminar Management
-          </h1>
-          <p className="text-gray-600">
-            Comprehensive dashboard for monitoring doctoral progress and seminar activities
-          </p>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                PhD Seminar Management
+              </h1>
+              <p className="text-gray-600">
+                Comprehensive dashboard for monitoring doctoral progress and seminar activities
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </Button>
+            </div>
+          </div>
+          
+          {/* Quick Action Buttons */}
+          <div className="flex flex-wrap gap-3 mb-6">
+            <Button
+              onClick={handleCreateSeminar}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Seminar
+            </Button>
+            <Button
+              onClick={handleAddUser}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Add User
+            </Button>
+            <Button
+              onClick={handleCreateReport}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Submit Report
+            </Button>
+            <Button
+              onClick={handleCreatePoll}
+              variant="secondary"
+              className="flex items-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Create Poll
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
